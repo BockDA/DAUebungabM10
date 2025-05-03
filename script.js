@@ -54,7 +54,6 @@ class Testclass {
 
 }
 
-
 let test = new Testclass(variable1);
 
 test.mehrfach(10);
