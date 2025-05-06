@@ -52,11 +52,28 @@ class Testclass {
         console.log("Ausgabe va3 ", this.va3);
     }
 
+
+    testModulo(b) {
+        let a = 10;
+
+        let i = a % b;
+
+        console.log("Modulo ", i);
+
+
+
+
+    }
+
 }
 
 let test = new Testclass(variable1);
 
 test.mehrfach(10);
+test.testModulo(4);
+
+
+
 
 
 
