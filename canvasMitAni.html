@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Kollision mit Geschwindigkeit & Explosion</title>
+    <style>
+      canvas {
+        border: 1px solid black;
+        cursor: grab;
+      }
+      canvas:active {
+        cursor: grabbing;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <script>
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
+
+      const rectA = { x: 0, y: 100, width: 150, height: 150, dx: 2 };
+      const rectB = { x: 400, y: 200, width: 120, height: 120 };
+
+      let dragging = false;
+      let offsetX, offsetY;
+      let explosion = null;
+      const maxSpeed = 10;
+
+      function checkCollision(r1, r2) {
+        return (
+          r1.x < r2.x + r2.width &&
+          r1.x + r1.width > r2.x &&
+          r1.y < r2.y + r2.height &&
+          r1.y + r1.height > r2.y
+        );
+      }
+
+      function drawRect(rect, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      }
+
+      function drawExplosion(x, y, radius) {
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = "orange";
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.closePath();
+      }
+
+      function update() {
+        // Bewegung von rectA
+        rectA.x += rectA.dx;
+
+        if (rectA.x + rectA.width > canvas.width || rectA.x < 0) {
+          rectA.dx *= -1; // Richtungswechsel am Rand
+        }
+
+        const isColliding = checkCollision(rectA, rectB);
+
+        if (isColliding && !explosion) {
+          // Explosion starten
+          explosion = {
+            x: rectA.x + rectA.width / 2,
+            y: rectA.y + rectA.height / 2,
+            radius: 10,
+            maxRadius: 40,
+          };
+
+          // Geschwindigkeit erhöhen
+          rectA.dx =
+            Math.sign(rectA.dx) * Math.min(Math.abs(rectA.dx) + 1, maxSpeed);
+        }
+
+        // Explosion animieren
+        if (explosion) {
+          explosion.radius += 2;
+          if (explosion.radius > explosion.maxRadius) {
+            explosion = null;
+          }
+        }
+
+        draw();
+        requestAnimationFrame(update);
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const isColliding = checkCollision(rectA, rectB);
+
+        drawRect(rectA, isColliding ? "red" : "blue");
+        drawRect(rectB, isColliding ? "red" : "green");
+
+        if (explosion) {
+          drawExplosion(explosion.x, explosion.y, explosion.radius);
+        }
+      }
+
+      // Maussteuerung für rectB
+      canvas.addEventListener("mousedown", (e) => {
+        const mouseX = e.offsetX;
+        const mouseY = e.offsetY;
+
+        if (
+          mouseX > rectB.x &&
+          mouseX < rectB.x + rectB.width &&
+          mouseY > rectB.y &&
+          mouseY < rectB.y + rectB.height
+        ) {
+          dragging = true;
+          offsetX = mouseX - rectB.x;
+          offsetY = mouseY - rectB.y;
+        }
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (dragging) {
+          rectB.x = e.offsetX - offsetX;
+          rectB.y = e.offsetY - offsetY;
+        }
+      });
+
+      canvas.addEventListener("mouseup", () => (dragging = false));
+      canvas.addEventListener("mouseleave", () => (dragging = false));
+
+      update(); // Start der Animation
+    </script>
+  </body>
+</html>
